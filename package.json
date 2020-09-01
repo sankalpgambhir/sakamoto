@@ -1,0 +1,26 @@
+{
+  "name": "sakamoto",
+  "version": "1.0.0",
+  "description": "A relatively-general-purpose Discord bot",
+  "main": "src/index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node ./src/index.js",
+    "dev": "nodemon ./src/index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sankalpgambhir/sakamoto.git"
+  },
+  "keywords": [],
+  "author": "sankalpgambhir",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/sankalpgambhir/sakamoto/issues"
+  },
+  "homepage": "https://github.com/sankalpgambhir/sakamoto#readme",
+  "dependencies": {
+    "discord.js": "^12.3.1",
+    "dotenv": "^8.2.0"
+  }
+}
