@@ -34,13 +34,9 @@ class Reminder{
         this.attach = remattach;
     }
 
-    getremstring() {
-        var str = "Oi, ${this.ref},\n**${this.name}**\n*${this.desc}*\n${this.attach}";
-        return str;
-    }
-
 };
 
+// parameters
 // how are our commands formatted?
 const __prefix = 'uwu';
 const __separator = '_';
@@ -48,7 +44,46 @@ const __date_format = 'yyyy/mm/dd';
 
 var inputs = ['help', 'setreminder'];
 
+var __remintminutes = 5;
+var __reminterval = __remintminutes * 60 * 1000;
+const __day_interval = 24 * 60 * 60 * 1000;
+const __week_interval = 7 * __day_interval;
+
 var rems = [];
+
+function isInt(value) {
+    return !isNaN(value) && 
+           parseInt(Number(value)) == value && 
+           !isNaN(parseInt(value, 10));
+}
+
+function get_rem_string(rem) {
+    var str = `Oi, ${rem.ref},\n**${rem.name}**\n*${rem.desc}*\n${rem.attach}`;
+    return str;
+}
+
+function write_rems(){
+    var back = fs.readFileSync('rems.json');
+    var remstowrite = JSON.stringify(rems);
+    fs.writeFileSync('remsback.json', back);
+    fs.writeFileSync('rems.json', remstowrite);
+    fs.writeFileSync('remsback.json', remstowrite);
+}
+
+function read_rems() {
+    var back = fs.readFileSync('remsback.json');
+    var fresh = fs.readFileSync('rems.json'); 
+    if(back === fresh){
+        console.log('Stored data OK!');
+    }
+    else{
+        console.error('Stored data backup mismatch!')
+    }
+    msgstr = `Stored data & backup mismatch! Check reminders manually, ${process.env.ERROR_HANDLER}`;
+    client.channels.cache.get(`${process.env.ERROR_CHANNEL}`).send(msgstr);
+
+    rems = JSON.parse(fresh);
+}
 
 function give_syntax(command) {
     var str = "";
@@ -58,6 +93,8 @@ function give_syntax(command) {
 
             str = str + "`help`\nI'll tell you everything you can do, since you're stupid enough to need that, apparently.\nType a command name after `help` to learn about it in detail.\n\n";
             str = str + "`setreminder name desc type date time ref attach`\nI'll remind you about st later, since you're clearly incapable of doing it yourself.\n\n";
+            str = str + "`listreminder index`\nYou wanna test if I still remember what you told me to? Ofc I do you little brat, try and ask.\nUse it without the index to see what you can ask about, sigh.\n\n";
+            str = str + "`remreminder index`\nI will gladly forget anything you have ever told me. Just tell me what and get it over with.\n\n";
 
             break;
         case 'setreminder':
@@ -71,6 +108,14 @@ function give_syntax(command) {
             str = str + "`attach` - Want me to make a funny face or some shit, you brat? Tch\nA ball of yarn and you can send a GIF link in or st.\n";       
             str = str + "\nAnd you make goddamn sure you send all of them and you send all of them just fine or I'm not doing it for you.\n\n";
             break;     
+
+        case 'listreminder':
+            str = str + "`listreminder index`\nYou wanna test if I still remember what you told me to? Ofc I do you little brat, try and ask.\nUse it without the index to see what you can ask about, sigh.\n\n";
+            break;
+
+        case 'remreminder':
+            str = str + "`remreminder index`\nI will gladly forget anything you have ever told me. Just tell me what and get it over with.\n\n";
+            break;
     }
     return str;
 }
@@ -120,6 +165,59 @@ function show_reminder_by_index(remid) {
     return str;
 }
 
+function show_succinct_reminder_by_index(remid) {
+    str = "";
+    item = rems[remid];
+    str = str + "Name : `" + `${item.name}` + "`\n";
+    str = str + "Description : `" + `${item.desc}` + "`\n";
+    str = str + "Refers : `" + `${item.ref}` + "`\n";
+    return str;
+}
+
+async function schedule_send_rems() {
+    setInterval(async function() {
+        console.log("Checking and sending reminders...");
+        curr_time = Date.now();
+        // go through reminders to see if any have passed
+        for(r in rems){
+            if(rems[r].date < curr_time){
+                // send the reminder
+                send_rem(rems[r]);
+                
+                // delay this reminder to next time or delete
+                if(rems[r].type === 'once'){
+                    // delete
+                    rems.splice(r, 1);
+                    r = r - 1;
+                    continue;
+                }
+                else if(rems[r].type === 'daily'){
+                    while(rems[r].date < curr_time){
+                        rems[r].date = rems[r].date + __day_interval;
+                    }
+                }
+                else if(rems[r].type === 'weekly'){
+                    while(rems[r].date < curr_time){
+                        rems[r].date = rems[r].date + __week_interval;
+                    }
+                }
+            }
+        }
+
+      }, __reminterval);
+}
+
+function send_rem(r) {
+    msgstr = get_rem_string(r);
+    client.channels.cache.get(`${process.env.REMINDERS_CHANNEL}`).send(msgstr);
+    return;
+}
+
+function rem_reminder(index) {
+    rems.splice(index, 1);
+    return;
+}
+
 const Discord = require('discord.js');
 const { strict, strictEqual } = require('assert');
 const { time } = require('console');
@@ -129,6 +227,8 @@ const client = new Discord.Client();
 client.on('ready', () => {
   console.log(`Logged in as ${client.user.tag}!`);
   client.user.setActivity('the world fall apart', { type: 'WATCHING' });
+  read_rems();
+  schedule_send_rems();
 });
 
 
@@ -181,10 +281,54 @@ client.on('message', async (msg) => {
                 msgstr = "I've set your reminder for you... now shoo, lemme sleep.\n\n";
                 msgstr = msgstr + show_reminder_by_index(rems.length - 1);
                 msg.channel.send(msgstr);
+                console.log(`Length: ${rems.length}`);
+                write_rems();
                 break;
 
+            case 'listreminder':
+                if(args.length == 0){
+                    // list all succinctly
+                    msgstr = 'Temme the index if you wanna know about any of em in detail\n\n\n';
+                    
+                    for(var i in rems){
+                        msgstr = msgstr + `${i}. ` + show_succinct_reminder_by_index(i) + "\n\n";
+                    }
+                    msg.channel.send(msgstr);
+                    break;
+                }
+                if(!(isInt(args[0])) || args[0] < 0 || args[0] >= rems.length){
+                    // Invalid index
+                    msgstr = "Dunno what reminder you\'re talking about, kid.\nLemme sleep if you're just messing around.";
+                    msg.channel.send(msgstr);
+                    break;
+                }
+
+                msgstr = 'Here ya go, kid\n\n';
+                msgstr = msgstr + show_reminder_by_index(args[0]);
+                msg.channel.send(msgstr);
+                break;
+
+            case 'remreminder':
+                if(args.length == 0){
+                    msgstr = "Deleted nothing, created black hole.\n-_-\nDon't mess with me, kid. Specify what you want to delete.";
+                    msg.channel.send(msgstr);
+                    break;
+                }
+                if(!(isInt(args[0])) || args[0] < 0 || args[0] >= rems.length){
+                    // Invalid index
+                    msgstr = "Deleted nothing, created black hole.\n-_-\nDon't mess with me, kid. Specify a valid index.";
+                    msg.channel.send(msgstr);
+                    break;
+                }
+                msgstr = "Deleting reminder:\n\n";
+                msgstr = msgstr + show_reminder_by_index(args[r]);
+                msg.channel.send(msgstr);
+                rem_reminder(args[0]);
+                break;
+
+
             default:
-                console.log('Invalid command ${__cmd}.');
+                console.log(`Invalid command ${_cmd}.`);
                 msgstr = 'Atleast type properly, brat...\nHere, I\'ll help you out... sigh\n';
                 msgstr = msgstr + give_syntax('help');
                 msg.channel.send(msgstr);
