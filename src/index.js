@@ -22,7 +22,7 @@ class Reminder{
         remdesc,
         remtype,
         remdate,
-        remtime,
+        remref,
         remattach
     ){
         this.id = remid;
@@ -30,7 +30,6 @@ class Reminder{
         this.desc = remdesc;
         this.type = remtype;
         this.date = remdate;
-        this.time = remtime;
         this.ref = remref;
         this.attach = remattach;
     }
@@ -45,9 +44,11 @@ class Reminder{
 // how are our commands formatted?
 const __prefix = 'uwu';
 const __separator = '_';
-const __date_format = 'dd/mm/yyyy';
+const __date_format = 'yyyy/mm/dd';
 
-var inputs = ['setreminder'];
+var inputs = ['help', 'setreminder'];
+
+var rems = [];
 
 function give_syntax(command) {
     var str = "";
@@ -55,7 +56,7 @@ function give_syntax(command) {
         case 'help':
             str = str + "Well first you temme you need something\nType `" + `${__prefix}` + "`followed by one of these\n\n";
 
-            str = str + "`help`\nI'll tell you everything you can do, since you're stupid enough to need that, apparently.\n\n";
+            str = str + "`help`\nI'll tell you everything you can do, since you're stupid enough to need that, apparently.\nType a command name after `help` to learn about it in detail.\n\n";
             str = str + "`setreminder name desc type date time ref attach`\nI'll remind you about st later, since you're clearly incapable of doing it yourself.\n\n";
 
             break;
@@ -74,8 +75,54 @@ function give_syntax(command) {
     return str;
 }
 
+function parse_reminder(id, args) {
+    args[0].split(__separator).join(' ');
+    args[1].split(__separator).join(' ');
+    if(!(args[2] === 'once' || args[2] === 'daily' || args[2] === 'weekly')){
+        console.log("Invalid reminder type passed!");
+        return 2;
+    }
+    date_vec = args[3].split('/');
+    if(date_vec.length != 3){
+        console.log("Invalid date passed!");
+        return 3;
+    }
+    else if(isNaN(date_vec[0]) || isNaN(date_vec[1]) || isNaN(date_vec[2])){
+        console.log("Invalid date passed!");
+        return 3;
+    }
+    if(isNaN(args[4] || args[4] < 0 || args[4] > 2359 || args[4]%100 > 59)){
+        console.log("Invalid time passed!");
+    }
+
+    time_vec = [Math.floor(args[4]/100), args[4] % 100];
+
+    date = new Date(date_vec[0], date_vec[1] - 1, date_vec[2], time_vec[0], time_vec[1]);
+
+    rem = new Reminder(id, args[0], args[1], args[2], date, args[5], args[6]);
+
+    rems.push(rem);
+
+    return 0;
+
+}
+
+function show_reminder_by_index(remid) {
+    str = "";
+    item = rems[remid];
+    str = str + "ID : `" + `${item.id}` + "`\n"
+    str = str + "Name : `" + `${item.name}` + "`\n";
+    str = str + "Description : `" + `${item.desc}` + "`\n";
+    str = str + "Remind : `" + `${item.type}` + "`\n";
+    str = str + "Next reminder : `" + `${item.date.toString()}` + "`\n";
+    str = str + "Refers : `" + `${item.ref}` + "`\n";
+    str = str + "Attaches : \n" + `${item.ref}` + "\n";
+    return str;
+}
+
 const Discord = require('discord.js');
 const { strict, strictEqual } = require('assert');
+const { time } = require('console');
 const client = new Discord.Client();
 
 
@@ -105,8 +152,7 @@ client.on('message', async (msg) => {
                     msgstr = msgstr + give_syntax('help');
                 }
                 else{
-                    console.log(args[0]);
-                    if(args[0] in inputs){
+                    if(inputs.includes(args[0])){
                         msgstr = msgstr + "\* yawns \* here ya go\n\n";
                         msgstr = msgstr + give_syntax(args[0]);
                     }
@@ -119,11 +165,23 @@ client.on('message', async (msg) => {
 
             case 'setreminder':
                 if(args.length != 7){
-                    msgstr = 'Atleast type properly, brat...\nHere, I\'ll help you out... sigh\n';
-                    msgstr = msgstr + give_syntax('reminder');
+                    msgstr = 'Told you to type them properly, didn\'t I, brat?\n';
+                    msgstr = msgstr + give_syntax('help');
                     msg.channel.send(msgstr);
                     break;
                 }
+
+                if(parse_reminder(msg.id, args) != 0){
+                    msgstr = 'Told you to type them properly, didn\'t I, brat?\n';
+                    msgstr = msgstr + give_syntax('help');
+                    msg.channel.send(msgstr);
+                    break;
+                }
+
+                msgstr = "I've set your reminder for you... now shoo, lemme sleep.\n\n";
+                msgstr = msgstr + show_reminder_by_index(rems.length - 1);
+                msg.channel.send(msgstr);
+                break;
 
             default:
                 console.log('Invalid command ${__cmd}.');
