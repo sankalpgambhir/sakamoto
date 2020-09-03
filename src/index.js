@@ -38,13 +38,13 @@ class Reminder{
 
 // parameters
 // how are our commands formatted?
-const __prefix = 'uwu';
+const __prefix = '\\uwu';
 const __separator = '_';
 const __date_format = 'yyyy/mm/dd';
 
 var inputs = ['help', 'setreminder'];
 
-var __remintminutes = 5;
+var __remintminutes = 0.5;
 var __reminterval = __remintminutes * 60 * 1000;
 const __day_interval = 24 * 60 * 60 * 1000;
 const __week_interval = 7 * __day_interval;
@@ -83,6 +83,11 @@ function read_rems() {
     client.channels.cache.get(`${process.env.ERROR_CHANNEL}`).send(msgstr);
 
     rems = JSON.parse(fresh);
+    for(r in rems){
+        if (isString(rems[r].date)){
+            rems[r].date = Date.parse(rems[r].date);
+        }
+    }
 }
 
 function give_syntax(command) {
@@ -159,9 +164,9 @@ function show_reminder_by_index(remid) {
     str = str + "Name : `" + `${item.name}` + "`\n";
     str = str + "Description : `" + `${item.desc}` + "`\n";
     str = str + "Remind : `" + `${item.type}` + "`\n";
-    str = str + "Next reminder : `" + `${item.date.toString()}` + "`\n";
+    str = str + "Next reminder : `" + `${(new Date(item.date)).toString()}` + "`\n";
     str = str + "Refers : `" + `${item.ref}` + "`\n";
-    str = str + "Attaches : \n" + `${item.ref}` + "\n";
+    str = str + "Attaches : \n" + `${item.attach}` + "\n";
     return str;
 }
 
@@ -178,11 +183,16 @@ async function schedule_send_rems() {
     setInterval(async function() {
         console.log("Checking and sending reminders...");
         curr_time = Date.now();
+        console.log(`Curr time : ${curr_time.toString()}`);
+        var changed = false;
         // go through reminders to see if any have passed
         for(r in rems){
+            console.log(`Rem ${r} time : ${rems[r].date}`);
             if(rems[r].date < curr_time){
+                console.log(`Found reminder ${r}...`);
                 // send the reminder
                 send_rem(rems[r]);
+                changed = true;
                 
                 // delay this reminder to next time or delete
                 if(rems[r].type === 'once'){
@@ -190,7 +200,7 @@ async function schedule_send_rems() {
                     rems.splice(r, 1);
                     r = r - 1;
                     continue;
-                }
+                 }
                 else if(rems[r].type === 'daily'){
                     while(rems[r].date < curr_time){
                         rems[r].date = rems[r].date + __day_interval;
@@ -202,6 +212,12 @@ async function schedule_send_rems() {
                     }
                 }
             }
+            else{
+                console.log(`Ignored reminder ${r}...`);
+            }
+        }
+        if(changed){
+            write_rems();
         }
 
       }, __reminterval);
@@ -221,6 +237,7 @@ function rem_reminder(index) {
 const Discord = require('discord.js');
 const { strict, strictEqual } = require('assert');
 const { time } = require('console');
+const { isString } = require('util');
 const client = new Discord.Client();
 
 
@@ -321,9 +338,10 @@ client.on('message', async (msg) => {
                     break;
                 }
                 msgstr = "Deleting reminder:\n\n";
-                msgstr = msgstr + show_reminder_by_index(args[r]);
+                msgstr = msgstr + show_reminder_by_index(args[0]);
                 msg.channel.send(msgstr);
                 rem_reminder(args[0]);
+                write_rems();
                 break;
 
 
