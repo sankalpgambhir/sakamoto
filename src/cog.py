@@ -63,7 +63,7 @@ class Gamba(commands.Cog):
         )
     async def _rolldice(self, ctx: SlashContext, dummy=None):
         embed = discord.Embed(description=get_rand_sassy(), title=str(random.randint(1, 6)))
-        embed.set_thumbnail(url="https://i.imgur.com/IkJzBOX.png")
+        embed.set_thumbnail(url="https://i.imgur.com/AYCmeEa.jpg")
         await ctx.send(embeds=[embed])
 
 def setup(bot):
