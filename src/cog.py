@@ -12,7 +12,7 @@ sassy = [
 def get_rand_sassy():
     return sassy[random.randint(0, len(sassy)-1)]
 
-class Slash(commands.Cog):
+class Test(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
@@ -57,15 +57,42 @@ class Gamba(commands.Cog):
 
     @cog_ext.cog_slash(
         name="roll-dice",
-        description='get a dice roll',
+        description='get an n-dice roll',
         guild_ids=[568123114349920256],
-        options=[]
+        options=[
+            create_option(
+                name="dsize",
+                description="dice size (default: 6)",
+                required=False,
+                option_type=4
+            )
+            ]
         )
-    async def _rolldice(self, ctx: SlashContext, dummy=None):
-        embed = discord.Embed(description=get_rand_sassy(), title=str(random.randint(1, 6)))
+    async def _rolldice(self, ctx: SlashContext, dsize=6):
+        if dsize < 1:
+            dsize = 6
+        embed = discord.Embed(description=('on dice with {} face(s).\n{}'.format(dsize, get_rand_sassy())), title=str(random.randint(1, dsize)))
         embed.set_thumbnail(url="https://i.imgur.com/AYCmeEa.jpg")
         await ctx.send(embeds=[embed])
 
+
+class Emote(commands.Cog):
+    def __init__(self, bot):
+        self.bot = bot
+
+    @cog_ext.cog_slash(
+        name="emote",
+        description='send custom emotes',
+        guild_ids=[568123114349920256],
+        options=[
+            # add choices here
+        ]
+        )
+    async def _emote(self, ctx: SlashContext, emote=None):
+        # send emote
+        await ctx.send("UNDEF")
+
 def setup(bot):
-    bot.add_cog(Slash(bot))
+    bot.add_cog(Test(bot))
     bot.add_cog(Gamba(bot))
+    bot.add_cog(Emote(bot))
