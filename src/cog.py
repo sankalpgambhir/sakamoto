@@ -4,6 +4,7 @@ from discord.ext import commands
 from discord_slash import cog_ext, SlashContext
 from discord_slash.utils.manage_commands import create_choice, create_option
 import random
+import pandas
 
 sassy = [
     "Don't make me do your petty work, kid."
@@ -79,18 +80,31 @@ class Gamba(commands.Cog):
 class Emote(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
+        self.emotelist = pandas.read_csv('emoji.csv', sep='\t').values
+        self.emotelist = [[x[0].lower(), x[1]] for x in self.emotelist]
 
     @cog_ext.cog_slash(
         name="emote",
         description='send custom emotes',
         guild_ids=[568123114349920256],
         options=[
-            # add choices here
+            create_option(
+                name="which",
+                description="which emote to send",
+                required=True,
+                option_type=3
+            )
         ]
         )
-    async def _emote(self, ctx: SlashContext, emote=None):
+    async def _emote(self, ctx: SlashContext, which=""):
         # send emote
-        await ctx.send("UNDEF")
+
+        emotelink = next((x[1] for x in self.emotelist if x[0] == which.lower()), None)
+
+        if emotelink is not None:
+            await ctx.send(emotelink)
+        else:
+            pass
 
 
 class Reminder(commands.Cog):
