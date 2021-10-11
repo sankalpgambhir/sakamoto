@@ -11,6 +11,12 @@ sassy = [
     "Don't make me do your petty work, kid."
 ]
 
+image = {
+    'heads' : "https://i.imgur.com/NusQZZR.png",
+    'tails' : "https://i.imgur.com/IkJzBOX.png",
+    'lick'  : "https://i.imgur.com/AYCmeEa.jpg"
+}
+
 def get_rand_sassy():
     return sassy[random.randint(0, len(sassy)-1)]
 
@@ -48,10 +54,10 @@ class Gamba(commands.Cog):
     async def _flipcoin(self, ctx: SlashContext, dummy=None):
         if random.randint(0,1) == 0:
             coin = "Heads"
-            thumb = "https://i.imgur.com/NusQZZR.png"
+            thumb = image['heads']
         else:
             coin = "Tails"
-            thumb = "https://i.imgur.com/IkJzBOX.png"
+            thumb = image['tails']
 
         embed = discord.Embed(description=get_rand_sassy(), title=coin)
         embed.set_thumbnail(url=thumb)
@@ -74,7 +80,7 @@ class Gamba(commands.Cog):
         if dsize < 1:
             dsize = 6
         embed = discord.Embed(description=('on dice with {} face(s).\n{}'.format(dsize, get_rand_sassy())), title=str(random.randint(1, dsize)))
-        embed.set_thumbnail(url="https://i.imgur.com/AYCmeEa.jpg")
+        embed.set_thumbnail(url=image['lick'])
         await ctx.send(embeds=[embed])
 
 # read emotes and construct list
