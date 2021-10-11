@@ -32,5 +32,7 @@ if __name__ == '__main__':
 
     cog.setup(client)
 
+    print("Client setup... Logging in...")
+
     # login
     client.run(env._token)
