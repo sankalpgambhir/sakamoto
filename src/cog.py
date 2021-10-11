@@ -41,6 +41,15 @@ class Test(commands.Cog):
         embed = discord.Embed(title=("Is your integer " + str(integ) + "?"))
         await ctx.send(content="test", embeds=[embed])
 
+    @cog_ext.cog_slash(
+        name="bofa",
+        description="what's that status",
+        guild_ids=[568123114349920256],
+        options=[]
+        )
+    async def _test(self, ctx: SlashContext, dummy=''):
+        await ctx.send(content="take bofa these nuts in yo mouth")
+
 class Gamba(commands.Cog):
     def __init__(self, bot):
         self.bot = bot

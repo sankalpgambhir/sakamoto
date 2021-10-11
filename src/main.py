@@ -34,5 +34,11 @@ if __name__ == '__main__':
 
     print("Client setup... Logging in...")
 
+
+    @client.event
+    async def on_ready():
+        await client.change_presence(activity=discord.Game("bofa"), status=discord.Status.online)
+        print("Bot is ready!")
+
     # login
     client.run(env._token)
