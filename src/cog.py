@@ -113,7 +113,7 @@ class Emote(commands.Cog):
         self.bot = bot
 
     @cog_ext.cog_slash(
-        name="emote",
+        name="manualemote",
         description='send custom emotes',
         guild_ids=[568123114349920256],
         options=[
@@ -125,7 +125,7 @@ class Emote(commands.Cog):
             )
         ]
         )
-    async def _emote(self, ctx: SlashContext, which=""):
+    async def _manualemote(self, ctx: SlashContext, which=""):
         # send emote
 
         emotelink = next((x[1] for x in emotelist if x[0] == which.lower()), None)
@@ -136,7 +136,7 @@ class Emote(commands.Cog):
             pass
 
     @cog_ext.cog_slash(
-        name="autoemote",
+        name="emote",
         description='send custom emotes',
         guild_ids=[568123114349920256],
         options=[
@@ -151,7 +151,7 @@ class Emote(commands.Cog):
             for l in string.ascii_lowercase[:-1]
         ]
         )
-    async def _autoemote(self, ctx: SlashContext, dummy = '', *args, **kwargs):
+    async def _emote(self, ctx: SlashContext, dummy = '', *args, **kwargs):
         # send emote
 
         for l in kwargs.values():
