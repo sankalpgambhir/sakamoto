@@ -3,3 +3,6 @@
 
 # python files
 __pycache__
+
+# emote list
+emoji.csv
