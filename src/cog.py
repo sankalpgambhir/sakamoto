@@ -48,7 +48,7 @@ class Test(commands.Cog):
         options=[]
         )
     async def _test(self, ctx: SlashContext, dummy=''):
-        await ctx.send(content="take bofa these nuts in yo mouth")
+        await ctx.send(content="take bofa deez nuts in yo mouth")
 
 class Gamba(commands.Cog):
     def __init__(self, bot):
