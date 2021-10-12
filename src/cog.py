@@ -128,6 +128,8 @@ class Emote(commands.Cog):
     async def _manualemote(self, ctx: SlashContext, which=""):
         # send emote
 
+        emotelink = None
+
         emotelink = next((x[1] for x in emotelist if x[0] == which.lower()), None)
 
         if emotelink is not None:
@@ -153,6 +155,8 @@ class Emote(commands.Cog):
         )
     async def _emote(self, ctx: SlashContext, dummy = '', *args, **kwargs):
         # send emote
+
+        emotelink = None
 
         for l in kwargs.values():
             emotelink = next((x[1] for x in emotelist if x[0] == l.lower()), None)
